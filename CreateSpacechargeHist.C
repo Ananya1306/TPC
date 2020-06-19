@@ -107,8 +107,8 @@ void CreateSpacechargeHist(const char *dirname, const char *filename, int istart
   double Tpc_ElectronsPerGeV = Tpc_NTot / Tpc_dEdx*1e6; //electrons per gev.
 
   
-  TFile *outfile = TFile::Open(Form("%s_%dkHz.rcc_sc.hist.root",filename,freqKhz),"RECREATE");
-  TFile *outfile1 = TFile::Open(Form("%s_%dkHz.rcc_sc.hist.root",filename,freqKhz),"RECREATE");
+  //TFile *outfile = TFile::Open(Form("%s_%dkHz.rcc_sc.hist.root",filename,freqKhz),"RECREATE");
+  TFile *outfile1 = TFile::Open(Form("%s_%dkHz.rcc_sc.test.hist.root",filename,freqKhz),"RECREATE");
   int nr=159;
   int nphi=360;
   int nz=62*2;
@@ -171,6 +171,7 @@ void CreateSpacechargeHist(const char *dirname, const char *filename, int istart
 
   TRandom3 *rand = new TRandom3();
   //rand->Poisson(mean);
+  cout<<"Get Seed = "<<rand->GetSeed()<<endl;
 
   int eventnum = 0;
 
@@ -182,53 +183,68 @@ void CreateSpacechargeHist(const char *dirname, const char *filename, int istart
 
   int nBeams = z_rdo/(vIon/xingRate); 
 
-  for(int beamxing = 0; beamxing<nBeams; beamxing++){
-    printf("loading beamxing, eventnum = %d , %d\n ", beamxing, eventnum);
+      for(int beamxing = 0; beamxing<nBeams; beamxing++){
+  //    for(int beamxing = 0; beamxing<40000; beamxing++){
+    //    printf("loading beamxing, eventnum = %d , %d\n ", beamxing, eventnum);
+   
+
     float t0 = beamxing/xingRate;
     driftedZ=t0*vIon;//drift position in local units
 
 
     int nEventsHere = rand->Poisson(mean); //This generates a double, not an int
-    cout<<"nEventsHere = "<<nEventsHere<<endl;
-
+  
+    //    cout<<"nEventsHere = "<<nEventsHere<<endl;
+    //cout<<"maxend = "<<maxend<<endl;
     startingEve = stoppingEve%maxend;
     stoppingEve = startingEve + nEventsHere;
     // eventnum++;
+    //printf("loading beamxing %d of %d xings,  eventnum = %d, startingEve = %d, stoppingEve = %d, nEventsHere = %d\n",beamxing, nBeams,eventnum,startingEve,stoppingEve,nEventsHere);
+    printf("loading beamxing %d of %d xings\n", beamxing, nBeams);
 
     if(startingEve>=ourStart && startingEve<ourEnd){    
   
   //place the events starting at the first unused, and continuing until we have placed nEventsHere here.
-
+      //cout<<"if statement satisfied "<<" ourStart = "<<ourStart<<" ourEnd = "<<ourEnd<<endl;
     for(eventnum=startingEve; eventnum<stoppingEve; eventnum++){
+      //printf("Reading eve num from %d\n",eventnum%neve);
+      
       T->GetEntry(eventnum%neve); //the '%' guarantees we wrap around instead of asking for an event the file doesnt have.
      
+      //continue;
       
-
+   
     PHG4HitContainer::ConstRange range=eleHits->getHits();
     assert(range);
-  
+   
     float f=0.5;//for now, just pick the middle of the hit.  Do better later.
 
-    
+
+    //continue;
+
     for (PHG4HitContainer::ConstIterator hiter=range.first;hiter!=range.second;hiter++) {
       ne=hiter->second->get_eion()*Tpc_ElectronsPerGeV;
       //load the three coordinates in with units of cm.
       x = (hiter->second->get_x(0) + f * (hiter->second->get_x(1) - hiter->second->get_x(0)))*(cm);
       y = (hiter->second->get_y(0) + f * (hiter->second->get_y(1) - hiter->second->get_y(0)))*(cm);
       z = (hiter->second->get_z(0) + f * (hiter->second->get_z(1) - hiter->second->get_z(0)))*(cm);
+      
       if (z<0) continue;
       r=sqrt(x*x+y*y);
       phi=atan2(x,y);
       zprim=z-driftedZ;
       zibf=z_rdo-driftedZ;
+      
       if (phi<0) phi+=6.28319;
       //compute the bin volume:
       int bin=hCharge->GetYaxis()->FindBin(r/(cm));
       double hr=hCharge->GetYaxis()->GetBinLowEdge(bin);
       double vol=(hzstep*hphistep*(hr+hrstep*0.5)*hrstep)/cm/cm/cm;
       bool overFrame=IsOverFrame(r/(mm),phi);
-
+      
       hCharge->Fill(phi,r/(cm),zprim/(cm),ne/vol); //primary ion, drifted by t0, in cm
+      // printf("filling in the histograms %d %d")
+      //cout<<"Filling in hCharge histogram = "<<phi<<"\t"<<r/(cm)<<"\t"<<zprim/(cm)<<"\t"<<ne/vol<<endl;
       if (!overFrame) {
 	hCharge->Fill(phi,r/(cm),zibf/(cm),ne*ionsPerEle/vol); //amp ion, drifted by t0, in cm
 	hIBF->Fill(phi,r/(cm),zibf/(cm),ne*ionsPerEle/vol);
@@ -245,7 +261,8 @@ void CreateSpacechargeHist(const char *dirname, const char *filename, int istart
     }
   }
     
-  //outfile->cd();
+      //outfile->cd();
+  
   outfile1->cd();
   hCharge->Write();
   hPrimary->Write();
@@ -258,4 +275,3 @@ void CreateSpacechargeHist(const char *dirname, const char *filename, int istart
   outfile1->Close();
   return;
 }
-
