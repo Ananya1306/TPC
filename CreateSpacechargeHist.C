@@ -53,7 +53,7 @@ bool IsOverFrame(double r, double phi){
   return false;
 }
 
-void CreateSpacechargeHist(const char *dirname, const char *filename, int istart=0, int maxend=0, int freqKhz=22, bool saveTree=false){
+void CreateSpacechargeHist(const char *dirname, const char *filename, int istart=0, int maxend=0, int freqKhz=22, int beamStart=0, int beamEnd = 80000, bool saveTree=false){
   printf("are you running with the sphenix env?  This probably doesn't work without that!\n");
 
   gSystem->Load("libg4testbench.so");
@@ -105,10 +105,9 @@ void CreateSpacechargeHist(const char *dirname, const char *filename, int istart
   double Tpc_dEdx = 0.90 * Ne_dEdx + 0.10 * CF4_dEdx;
   double Tpc_ElectronsPerKeV = Tpc_NTot / Tpc_dEdx;
   double Tpc_ElectronsPerGeV = Tpc_NTot / Tpc_dEdx*1e6; //electrons per gev.
-
-  
-  //TFile *outfile = TFile::Open(Form("%s_%dkHz.rcc_sc.hist.root",filename,freqKhz),"RECREATE");
-  TFile *outfile1 = TFile::Open(Form("%s_%dkHz.rcc_sc.test.hist.root",filename,freqKhz),"RECREATE");
+ 
+   
+   TFile *outfile = TFile::Open(Form("%s_%dkHz.rcc_sc.hist.root",filename,freqKhz),"RECREATE");
   int nr=159;
   int nphi=360;
   int nz=62*2;
@@ -183,13 +182,42 @@ void CreateSpacechargeHist(const char *dirname, const char *filename, int istart
 
   int nBeams = z_rdo/(vIon/xingRate); 
 
-      for(int beamxing = 0; beamxing<nBeams; beamxing++){
-  //    for(int beamxing = 0; beamxing<40000; beamxing++){
+  PHG4HitContainer::ConstRange range;
+
+   float f=0.5;//for now, just pick the middle of the hit.  Do better later.
+   int bin;   double hr, vol;
+   bool overFrame;
+
+   //testing something
+   unsigned long now, start;
+   int nticks = 0;
+   int tock = 100;
+   start = gSystem->Now();
+
+   //for(int i=0; i<subsets; i++){
+
+   //rand->SetSeed(beamXing[i]);
+   rand->SetSeed(beamStart);
+   cout<<"Seed = "<<rand->GetSeed()<<endl;
+
+   //TFile *outfile = TFile::Open(Form("%s_%dkHz.rcc_sc_beamxingtest%s.hist.root",filename,freqKhz,freqName[i].c_str()),"RECREATE");
+
+      for(int beamxing = beamStart; beamxing<beamEnd&&beamxing<nBeams; beamxing++){
+   // for(int beamxing = beamXing[i]; beamxing<beamXing[i+1]; beamxing++){
+   //   for(int beamxing = 730000; beamxing<nBeams; beamxing++){
     //    printf("loading beamxing, eventnum = %d , %d\n ", beamxing, eventnum);
    
 
-    float t0 = beamxing/xingRate;
+    float t0 = (beamxing/xingRate); //units in microseconds
     driftedZ=t0*vIon;//drift position in local units
+
+    nticks++;
+    if(nticks>tock){
+      nticks = 0;
+      now = gSystem->Now();
+      printf("time since last tock is %lu\n",(unsigned long)(now-start));
+      start = now;
+    }
 
 
     int nEventsHere = rand->Poisson(mean); //This generates a double, not an int
@@ -199,36 +227,58 @@ void CreateSpacechargeHist(const char *dirname, const char *filename, int istart
     startingEve = stoppingEve%maxend;
     stoppingEve = startingEve + nEventsHere;
     // eventnum++;
-    //printf("loading beamxing %d of %d xings,  eventnum = %d, startingEve = %d, stoppingEve = %d, nEventsHere = %d\n",beamxing, nBeams,eventnum,startingEve,stoppingEve,nEventsHere);
-    printf("loading beamxing %d of %d xings\n", beamxing, nBeams);
+    printf("loading beamxing %d of %d xings,  eventnum = %d, startingEve = %d, stoppingEve = %d, nEventsHere = %d\n",beamxing, nBeams,eventnum,startingEve,stoppingEve,nEventsHere);
+    //printf("loading beamxing %d of %d xings\n", beamxing, nBeams);
 
     if(startingEve>=ourStart && startingEve<ourEnd){    
   
   //place the events starting at the first unused, and continuing until we have placed nEventsHere here.
-      //cout<<"if statement satisfied "<<" ourStart = "<<ourStart<<" ourEnd = "<<ourEnd<<endl;
+      //   cout<<"if statement satisfied "<<" ourStart = "<<ourStart<<" ourEnd = "<<ourEnd<<endl;
     for(eventnum=startingEve; eventnum<stoppingEve; eventnum++){
-      //printf("Reading eve num from %d\n",eventnum%neve);
-      
-      T->GetEntry(eventnum%neve); //the '%' guarantees we wrap around instead of asking for an event the file doesnt have.
+      // printf("Reading eve num from %d from file name %s\n",eventnum%neve, filename);
+      //printf("Reading evt num %d",eventnum);
+
+      //  T->GetEntry(23);
+
      
+       T->GetEntry(eventnum%neve); //the '%' guarantees we wrap around instead of asking for an event the file doesnt have.
+
+      range=eleHits->getHits();
+      //cout<<"range"<<endl;
+      assert(range);
+      //cout<<"assert range works!"<<endl;
+
+
       //continue;
       
-   
-    PHG4HitContainer::ConstRange range=eleHits->getHits();
+      /*
+      range=NULL;
+      range=eleHits->getHits();
+      if(range == NULL){
+	cout<<"No range object for this event!!!"<<endl;
+	assert(false);
+      }
+
+
     assert(range);
    
-    float f=0.5;//for now, just pick the middle of the hit.  Do better later.
-
+      */
 
     //continue;
-
+      /*
+      cout<<"Checking hiter for range.first"<<endl;
+      cout<<"ne = "<<range.first->second->get_eion()<<endl;
+      cout<<"x = "<<range.first->second->get_x(0)<<endl;
+      cout<<"y = "<<range.first->second->get_y(0)<<endl;
+      cout<<"z = "<<range.first->second->get_z(0)<<endl;
+      */
     for (PHG4HitContainer::ConstIterator hiter=range.first;hiter!=range.second;hiter++) {
       ne=hiter->second->get_eion()*Tpc_ElectronsPerGeV;
       //load the three coordinates in with units of cm.
       x = (hiter->second->get_x(0) + f * (hiter->second->get_x(1) - hiter->second->get_x(0)))*(cm);
       y = (hiter->second->get_y(0) + f * (hiter->second->get_y(1) - hiter->second->get_y(0)))*(cm);
       z = (hiter->second->get_z(0) + f * (hiter->second->get_z(1) - hiter->second->get_z(0)))*(cm);
-      
+
       if (z<0) continue;
       r=sqrt(x*x+y*y);
       phi=atan2(x,y);
@@ -237,13 +287,13 @@ void CreateSpacechargeHist(const char *dirname, const char *filename, int istart
       
       if (phi<0) phi+=6.28319;
       //compute the bin volume:
-      int bin=hCharge->GetYaxis()->FindBin(r/(cm));
-      double hr=hCharge->GetYaxis()->GetBinLowEdge(bin);
-      double vol=(hzstep*hphistep*(hr+hrstep*0.5)*hrstep)/cm/cm/cm;
-      bool overFrame=IsOverFrame(r/(mm),phi);
-      
+      bin=hCharge->GetYaxis()->FindBin(r/(cm));
+      hr=hCharge->GetYaxis()->GetBinLowEdge(bin);
+      vol=(hzstep*hphistep*(hr+hrstep*0.5)*hrstep)/cm/cm/cm;
+      overFrame=IsOverFrame(r/(mm),phi);
+      //cout<<"values in iterator loop filled"<<endl;
       hCharge->Fill(phi,r/(cm),zprim/(cm),ne/vol); //primary ion, drifted by t0, in cm
-      // printf("filling in the histograms %d %d")
+      // printf("filling in the histograms %d %d");
       //cout<<"Filling in hCharge histogram = "<<phi<<"\t"<<r/(cm)<<"\t"<<zprim/(cm)<<"\t"<<ne/vol<<endl;
       if (!overFrame) {
 	hCharge->Fill(phi,r/(cm),zibf/(cm),ne*ionsPerEle/vol); //amp ion, drifted by t0, in cm
@@ -255,15 +305,24 @@ void CreateSpacechargeHist(const char *dirname, const char *filename, int istart
       
       if (saveTree){
 	rawHits->Fill();
+	
       }
+      // cout<<"histograms filles"<<endl;
+      //     cout<<"for loop for iterator works 2"<<endl;
     }
+    //cout<<"for eventnum loop works"<<endl;
     }
+    //cout<<"if startingEve loop works"<<endl;
     }
-  }
+    // cout<<"beamxing completed"<<endl;
+      }
     
-      //outfile->cd();
+      cout<<"Writing out the files"<<endl;
+      
+
+outfile->cd();
   
-  outfile1->cd();
+//     outfile1->cd();
   hCharge->Write();
   hPrimary->Write();
   hIBF->Write();
@@ -271,7 +330,9 @@ void CreateSpacechargeHist(const char *dirname, const char *filename, int istart
   if (saveTree){
     rawHits->Write();
   }
-  //outfile->Close();
-  outfile1->Close();
+  outfile->Close();
+   
+   //outfile->Close();
+  // outfile1->Close();
   return;
 }
