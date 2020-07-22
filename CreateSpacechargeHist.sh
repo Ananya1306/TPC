@@ -29,19 +29,18 @@ basename="G4Hits_sHijing_0-12fm_"
 #maxend=1000
 maxend=50
 eveperfile=50
-freq=200
-beamEnd=80000
+freq=50
+beamEnd=734352
 beamSubset=40000 
 #for freq in 200 100 20 10
  # do
 
     #for((r=0;r<=1;r+1)); do
-for((beamStart=0;beamStart<=beamEnd-beamSubset;beamStart=beamStart+beamSubSet)); do
-    beamX=$(($beamStart+$beamSubset))
+for((beamStart=0;beamStart<=beamEnd;beamStart=beamStart+beamSubset)); do
       for ((r=0;r<=maxend-eveperfile;r=r+eveperfile)); do
 	  rp=$(($r+$eveperfile))
-	  fname=$basename`printf "%05d\n" $r`_`printf "%05d\n" $rp`_`printf "%05d\n" $beamStart`_`printf "%05d\n" $beamX`.root
-	   root -b -q CreateSpacechargeHist.C\(\"$dir\",\"$fname\",$r,$maxend,$freq,$beamStart,$beamEnd,0\)
+	  fname=$basename`printf "%05d\n" $r`_`printf "%05d\n" $rp`.root
+	   root -b -q CreateSpacechargeHist.C\(\"$dir\",\"$fname\",$r,$maxend,$freq,$beamStart,$beamSubset,0\)
       done
       done
 #  done
