@@ -53,7 +53,7 @@ bool IsOverFrame(double r, double phi){
   return false;
 }
 
-void CreateSpacechargeHist(const char *dirname, const char *filename, int istart=0, int maxend=0, int freqKhz=22, int beamStart=0, int beamEnd = 80000, bool saveTree=false){
+void CreateSpacechargeHist(const char *dirname, const char *filename, int istart=0, int maxend=0, int freqKhz=22, int beamStart=0, int beamSubset = 40000, bool saveTree=false){
   printf("are you running with the sphenix env?  This probably doesn't work without that!\n");
 
   gSystem->Load("libg4testbench.so");
@@ -179,6 +179,8 @@ void CreateSpacechargeHist(const char *dirname, const char *filename, int istart
 
   int ourStart = istart;
   int ourEnd = ourStart + neve;
+
+  int beamEnd = beamStart + beamSubset;
 
   int nBeams = z_rdo/(vIon/xingRate); 
 
