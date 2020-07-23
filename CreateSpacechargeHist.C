@@ -107,7 +107,7 @@ void CreateSpacechargeHist(const char *dirname, const char *filename, int istart
   double Tpc_ElectronsPerGeV = Tpc_NTot / Tpc_dEdx*1e6; //electrons per gev.
  
    
-   TFile *outfile = TFile::Open(Form("%s_%dkHz.rcc_sc.hist.root",filename,freqKhz),"RECREATE");
+  TFile *outfile = TFile::Open(Form("%s_%dkHz_%d.rcc_sc.hist.root",filename,freqKhz,beamStart),"RECREATE");
   int nr=159;
   int nphi=360;
   int nz=62*2;
