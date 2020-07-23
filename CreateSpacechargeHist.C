@@ -196,6 +196,8 @@ void CreateSpacechargeHist(const char *dirname, const char *filename, int istart
    int tock = 100;
    start = gSystem->Now();
 
+   cout<<"BeamStarting = "<<BeamStarting<<endl;
+
    //for(int i=0; i<subsets; i++){
 
    //rand->SetSeed(beamXing[i]);

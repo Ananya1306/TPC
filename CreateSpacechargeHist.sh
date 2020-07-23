@@ -37,7 +37,7 @@ beamSubset=40000
  # do
 
     #for((r=0;r<=1;r+1)); do
-for((beamStart=BeamStarting;beamStart<=beamEnd;beamStart=beamStart+beamSubset)); do
+for((beam=BeamStarting;beam<=beamEnd;beam=BeamStarting+beamSubset)); do
       for ((r=0;r<=maxend-eveperfile;r=r+eveperfile)); do
 	  rp=$(($r+$eveperfile))
 	  fname=$basename`printf "%05d\n" $r`_`printf "%05d\n" $rp`.root
