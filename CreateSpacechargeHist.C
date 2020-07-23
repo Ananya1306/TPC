@@ -53,7 +53,7 @@ bool IsOverFrame(double r, double phi){
   return false;
 }
 
-void CreateSpacechargeHist(const char *dirname, const char *filename, int istart=0, int maxend=0, int freqKhz=22, int beamStart=0, int beamSubset = 40000, bool saveTree=false){
+void CreateSpacechargeHist(const char *dirname, const char *filename, int istart=0, int maxend=0, int freqKhz=22, int BeamStarting=0, int beamSubset = 40000, bool saveTree=false){
   printf("are you running with the sphenix env?  This probably doesn't work without that!\n");
 
   gSystem->Load("libg4testbench.so");
@@ -107,7 +107,7 @@ void CreateSpacechargeHist(const char *dirname, const char *filename, int istart
   double Tpc_ElectronsPerGeV = Tpc_NTot / Tpc_dEdx*1e6; //electrons per gev.
  
    
-  TFile *outfile = TFile::Open(Form("%s_%dkHz_%d.rcc_sc.hist.root",filename,freqKhz,beamStart),"RECREATE");
+  TFile *outfile = TFile::Open(Form("%s_%dkHz_%d.rcc_sc.hist.root",filename,freqKhz,BeamStarting),"RECREATE");
   int nr=159;
   int nphi=360;
   int nz=62*2;
@@ -180,7 +180,7 @@ void CreateSpacechargeHist(const char *dirname, const char *filename, int istart
   int ourStart = istart;
   int ourEnd = ourStart + neve;
 
-  int beamEnd = beamStart + beamSubset;
+  int beamEnd = BeamStarting + beamSubset;
 
   int nBeams = z_rdo/(vIon/xingRate); 
 
@@ -199,12 +199,12 @@ void CreateSpacechargeHist(const char *dirname, const char *filename, int istart
    //for(int i=0; i<subsets; i++){
 
    //rand->SetSeed(beamXing[i]);
-   rand->SetSeed(beamStart);
+   rand->SetSeed(BeamStarting);
    cout<<"Seed = "<<rand->GetSeed()<<endl;
 
    //TFile *outfile = TFile::Open(Form("%s_%dkHz.rcc_sc_beamxingtest%s.hist.root",filename,freqKhz,freqName[i].c_str()),"RECREATE");
 
-      for(int beamxing = beamStart; beamxing<beamEnd&&beamxing<nBeams; beamxing++){
+      for(int beamxing = BeamStarting; beamxing<beamEnd&&beamxing<nBeams; beamxing++){
    // for(int beamxing = beamXing[i]; beamxing<beamXing[i+1]; beamxing++){
    //   for(int beamxing = 730000; beamxing<nBeams; beamxing++){
     //    printf("loading beamxing, eventnum = %d , %d\n ", beamxing, eventnum);
