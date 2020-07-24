@@ -30,14 +30,14 @@ basename="G4Hits_sHijing_0-12fm_"
 maxend=50
 eveperfile=50
 freq=50
-BeamStarting=400000
+BeamStarting=0
 beamEnd=734352
 beamSubset=40000 
 #for freq in 200 100 20 10
  # do
 
     #for((r=0;r<=1;r+1)); do
-for((beam=BeamStarting;beam<=beamEnd;beam=BeamStarting+beamSubset)); do
+for((beam=BeamStarting;beam<=beamEnd;BeamStarting=BeamStarting+beamSubset)); do
       for ((r=0;r<=maxend-eveperfile;r=r+eveperfile)); do
 	  rp=$(($r+$eveperfile))
 	  fname=$basename`printf "%05d\n" $r`_`printf "%05d\n" $rp`.root
